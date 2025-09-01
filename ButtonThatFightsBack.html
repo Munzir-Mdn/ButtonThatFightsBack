@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Button That Fights Back</title>
+  <style>
+    :root{
+      --bg:#0f1226;
+      --panel:#171a34;
+      --ink:#e8ebff;
+      --muted:#b7bce6;
+      --accent:#7c9cff;
+      --accent-2:#a1ffd6;
+      --danger:#ff7c98;
+      --radius:18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--ink);
+      background: radial-gradient(1200px 700px at 20% 10%, #1a1e3f 0%, #0f1226 45%, #0b0d1d 100%);
+      overflow: hidden;
+    }
+
+    .wrap{
+      max-width: 1100px; margin: 24px auto; padding: 0 16px;
+    }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 12px; margin-bottom: 12px;
+    }
+
+    .title{
+      display:flex; flex-direction:column; gap:6px;
+    }
+
+    .title h1{
+      margin:0; font-weight:800; letter-spacing:0.2px; font-size:clamp(20px, 2.8vw, 30px);
+    }
+
+    .title p{ margin:0; color: var(--muted); font-size: 14px; }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .hud{ display:flex; gap:10px; flex-wrap:wrap; }
+    .stat{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius: 12px; background: rgba(255,255,255,0.04); }
+    .stat .label{ color: var(--muted); font-size:12px; letter-spacing:0.2px; }
+    .stat .value{ font-weight:700; font-size: 18px; }
+
+    .controls{ display:flex; align-items:center; gap:10px; margin-left:auto; }
+    .btn-reset{
+      appearance:none; border:0; cursor:pointer; color:#0a0f1f;
+      background: linear-gradient(180deg, var(--accent-2), #73f1c6);
+      padding:10px 14px; border-radius: 12px; font-weight:700;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.25);
+    }
+
+    .arena{
+      position: relative; height: calc(100vh - 140px);
+      margin-top: 14px; border-radius: calc(var(--radius) + 6px);
+      background: radial-gradient(800px 500px at 70% 40%, rgba(124,156,255,0.18), rgba(124,156,255,0.06) 35%, rgba(124,156,255,0.02) 60%, transparent 75%),
+                  linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), inset 0 20px 60px rgba(124,156,255,0.08);
+    }
+
+    /* The evasive button */
+    #escapeBtn{
+      --scale: 1;
+      position:absolute; inset:auto; left:50%; top:50%; transform: translate(-50%,-50%) scale(var(--scale));
+      padding: 14px 18px; border-radius: 999px; border: 0; cursor: pointer;
+      font-weight: 800; letter-spacing:0.2px; font-size: 16px; color: #0a1026;
+      background: linear-gradient(180deg, var(--accent), #5e7dfd);
+      box-shadow: 0 14px 28px rgba(124,156,255,0.45), 0 2px 0 rgba(255,255,255,0.35) inset;
+      will-change: transform, left, top;
+      transition: box-shadow 120ms ease, transform 120ms ease;
+      user-select: none;
+      touch-action: none;
+    }
+
+    #escapeBtn:hover{
+      box-shadow: 0 16px 34px rgba(124,156,255,0.55), 0 2px 0 rgba(255,255,255,0.45) inset;
+    }
+
+    #escapeBtn.caught{
+      background: linear-gradient(180deg, #ffd85e, #ffc24b);
+      box-shadow: 0 14px 28px rgba(255,210,86,0.45), 0 2px 0 rgba(255,255,255,0.5) inset;
+      animation: pop 360ms cubic-bezier(.2,1.2,.2,1);
+    }
+
+    @keyframes pop {
+      0% { transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(calc(var(--scale) * 1.0)); }
+      50% { transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(calc(var(--scale) * 1.15)); }
+      100% { transform: translate(var(--tx, -50%), var(--ty, -50%)) scale(var(--scale)); }
+    }
+
+    .help{
+      margin-top: 10px; color: var(--muted); font-size: 13px;
+    }
+
+    .meter{
+      margin-left: 6px; width: 120px; height: 8px; border-radius: 10px; background: rgba(255,255,255,0.08); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .meter > i{ display:block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-2), #6ff0ff); }
+
+    .badge { font-size: 12px; color: #0a1026; background: linear-gradient(180deg, #e6f0ff, #b9caff); padding: 3px 8px; border-radius: 999px; font-weight:700; }
+
+    @media (max-width: 640px){
+      .arena{ height: calc(100vh - 180px); }
+      #escapeBtn{ font-size: 15px; padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Button That Fights Back <span class="badge">Playful UI</span></h1>
+        <p>Try to click the button. It will dodge your pointer and get trickier every time you score. · Cuba klik butang itu. Ia akan mengelak kursor anda dan makin licik setiap kali anda skor.</p>
+      </div>
+      <div class="panel hud" role="status" aria-live="polite">
+        <div class="stat"><div class="label">Score · Skor</div><div class="value" id="score">0</div></div>
+        <div class="stat"><div class="label">Best · Terbaik</div><div class="value" id="best">0</div></div>
+        <div class="stat"><div class="label">Level · Tahap</div><div class="value" id="level">1</div><div class="meter"><i id="levelBar"></i></div></div>
+        <div class="controls">
+          <button class="btn-reset" id="resetBtn" title="Reset game · Tetap semula">Reset · Tetap semula</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="arena panel" id="arena" aria-label="Play area">
+      <button id="escapeBtn" aria-label="Catch me · Tangkap saya">Catch me · Tangkap saya</button>
+      <p class="help">Mouse: move close to chase. Touch: tap quickly. · Tetikus: gerakkan dekat untuk kejar. Sentuhan: ketik pantas.</p>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const arena = document.getElementById('arena');
+      const btn = document.getElementById('escapeBtn');
+      const scoreEl = document.getElementById('score');
+      const bestEl = document.getElementById('best');
+      const levelEl = document.getElementById('level');
+      const levelBar = document.getElementById('levelBar');
+      const resetBtn = document.getElementById('resetBtn');
+
+      // Persistent best score
+      const BEST_KEY = 'fightsback_bestScore_v1';
+      let best = Number(localStorage.getItem(BEST_KEY) || 0);
+      bestEl.textContent = best;
+
+      // Game state
+      const state = {
+        x: 0, y: 0, // position inside arena (px)
+        score: 0,
+        level: 1,
+        mouse: { x: null, y: null, inside: false },
+        params: { fleeRadius: 120, maxSpeed: 600, teleportPerSec: 0.0, jitter: 0, scale: 1 },
+        lastT: 0
+      };
+
+      // Base settings and growth per level (tuned for fun)
+      const BASE = { R: 120, SPEED: 600, TELE: 0.00, JITTER: 0.0 };
+      const GROW = { R: 12, SPEED: 30, TELE: 0.02, JITTER: 0.3, SCALE: 0.04 };
+      const LIMIT = { SCALE_MIN: 0.5, SPEED_MAX: 1500, TELE_MAX: 0.45 };
+
+      function updateParams(){
+        state.params.fleeRadius = BASE.R + (state.level - 1) * GROW.R;
+        state.params.maxSpeed   = Math.min(BASE.SPEED + (state.level - 1) * GROW.SPEED, LIMIT.SPEED_MAX);
+        state.params.teleportPerSec = Math.min(BASE.TELE + (state.level - 1) * GROW.TELE, LIMIT.TELE_MAX);
+        state.params.jitter = BASE.JITTER + (state.level - 1) * GROW.JITTER;
+        state.params.scale = Math.max(1 - (state.level - 1) * GROW.SCALE, LIMIT.SCALE_MIN);
+        btn.style.setProperty('--scale', state.params.scale);
+        levelEl.textContent = state.level;
+        levelBar.style.width = Math.min(100, (state.level - 1) * 6 + 5) + '%';
+      }
+
+      function placeAt(x, y){
+        const rect = arena.getBoundingClientRect();
+        const b = btn.getBoundingClientRect();
+        const btnW = b.width * state.params.scale; // scaled width
+        const btnH = b.height * state.params.scale;
+        const pad = 8; // keep some padding from edges
+        const maxX = rect.width - btnW - pad;
+        const maxY = rect.height - btnH - pad;
+        state.x = Math.max(pad, Math.min(x, maxX));
+        state.y = Math.max(pad, Math.min(y, maxY));
+        const tx = (state.x + btnW/2);
+        const ty = (state.y + btnH/2);
+        btn.style.left = state.x + 'px';
+        btn.style.top  = state.y + 'px';
+        btn.style.setProperty('--tx', (-(tx / 1) + 0) + 'px'); // keep pop keyframe compat
+        btn.style.setProperty('--ty', (-(ty / 1) + 0) + 'px');
+        btn.style.transform = `translate(0,0) scale(${state.params.scale})`;
+      }
+
+      function centerButton(){
+        const rect = arena.getBoundingClientRect();
+        placeAt(rect.width/2 - btn.offsetWidth/2, rect.height/2 - btn.offsetHeight/2);
+      }
+
+      // Get mouse/touch position relative to arena
+      function setPointer(clientX, clientY){
+        const r = arena.getBoundingClientRect();
+        state.mouse.x = clientX - r.left;
+        state.mouse.y = clientY - r.top;
+        state.mouse.inside = (state.mouse.x >= 0 && state.mouse.y >= 0 && state.mouse.x <= r.width && state.mouse.y <= r.height);
+      }
+
+      arena.addEventListener('mousemove', (e)=> setPointer(e.clientX, e.clientY));
+      arena.addEventListener('mouseleave', ()=> { state.mouse.inside = false; state.mouse.x = state.mouse.y = null; });
+
+      // Touch support: track finger position; tap acts like click
+      arena.addEventListener('touchstart', (e)=>{ if(e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+      arena.addEventListener('touchmove',  (e)=>{ if(e.touches[0]) setPointer(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+      arena.addEventListener('touchend',   ()=> { state.mouse.inside = false; state.mouse.x = state.mouse.y = null; });
+
+      // On click: score and escalate difficulty
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        // Clicking on touch may not fire mouse events; ensure focus state is fine
+        state.score += 1; scoreEl.textContent = state.score;
+        if(state.score > best){ best = state.score; bestEl.textContent = best; localStorage.setItem(BEST_KEY, String(best)); }
+        state.level = Math.max(1, state.score);
+        updateParams();
+        btn.classList.add('caught');
+        btn.textContent = state.level % 3 === 0 ? 'Too slow! · Terlalu lambat!' : 'Again! · Lagi!';
+        // Move somewhere far from the pointer
+        setTimeout(()=>{
+          btn.classList.remove('caught');
+          smartRelocate();
+          btn.textContent = catchLabel();
+        }, 260);
+      });
+
+      function catchLabel(){
+        return state.level >= 12 ? 'Ha! · Ha!' : 'Catch me · Tangkap saya';
+      }
+
+      resetBtn.addEventListener('click', ()=>{
+        state.score = 0; scoreEl.textContent = '0';
+        state.level = 1; updateParams();
+        btn.textContent = 'Catch me · Tangkap saya';
+        centerButton();
+      });
+
+      window.addEventListener('resize', ()=> centerButton());
+
+      function clamp(v, min, max){ return Math.max(min, Math.min(v, max)); }
+
+      function distance(ax, ay, bx, by){ const dx = ax - bx, dy = ay - by; return Math.hypot(dx, dy); }
+
+      function rand(min, max){ return Math.random() * (max - min) + min; }
+
+      function smartRelocate(){
+        const rect = arena.getBoundingClientRect();
+        const b = btn.getBoundingClientRect();
+        const w = b.width * state.params.scale, h = b.height * state.params.scale;
+        const tries = 20;
+        const avoidR = Math.max(160, state.params.fleeRadius * 0.9);
+        let nx = state.x, ny = state.y;
+        for(let i=0;i<tries;i++){
+          nx = rand(8, rect.width - w - 8);
+          ny = rand(8, rect.height - h - 8);
+          if(!state.mouse.inside) break;
+          const d = distance(nx + w/2, ny + h/2, state.mouse.x, state.mouse.y);
+          if(d > avoidR) break;
+        }
+        placeAt(nx, ny);
+      }
+
+      // Animation loop: evade pointer, possibly teleport
+      function tick(t){
+        if(!state.lastT) state.lastT = t;
+        const dt = Math.min(0.033, (t - state.lastT) / 1000);
+        state.lastT = t;
+
+        const r = arena.getBoundingClientRect();
+        const b = btn.getBoundingClientRect();
+        const bw = b.width * state.params.scale, bh = b.height * state.params.scale;
+        const bx = state.x + bw/2, by = state.y + bh/2;
+
+        if(state.mouse.inside && state.mouse.x != null){
+          const dx = bx - state.mouse.x, dy = by - state.mouse.y;
+          const d = Math.hypot(dx, dy) || 0.0001;
+          const within = d < state.params.fleeRadius;
+
+          if(within){
+            // Move away proportionally; closer pointer => bigger push
+            const push = (state.params.fleeRadius - d) / state.params.fleeRadius; // 0..1
+            const speed = state.params.maxSpeed * (0.35 + 0.65 * push);
+            const ux = dx / d, uy = dy / d;
+            const step = speed * dt;
+            const jitterX = (Math.random() - 0.5) * state.params.jitter;
+            const jitterY = (Math.random() - 0.5) * state.params.jitter;
+            let nx = state.x + ux * step + jitterX;
+            let ny = state.y + uy * step + jitterY;
+
+            // Edge bounce: if we hit a wall, slide along it instead of getting stuck
+            const pad = 6;
+            const maxX = r.width - bw - pad;
+            const maxY = r.height - bh - pad;
+            if(nx < pad) nx = pad; else if(nx > maxX) nx = maxX;
+            if(ny < pad) ny = pad; else if(ny > maxY) ny = maxY;
+
+            placeAt(nx, ny);
+
+            // Teleport sometimes if the player gets *too* close
+            const close = d < (state.params.fleeRadius * 0.38);
+            if(close && state.params.teleportPerSec > 0){
+              const chance = 1 - Math.exp(-state.params.teleportPerSec * dt); // frame-safe
+              if(Math.random() < chance){ smartRelocate(); }
+            }
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      // Init
+      updateParams();
+      centerButton();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
