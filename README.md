@@ -6,7 +6,7 @@ This is a fun little browser game where a button tries to **escape your mouse cu
 Each time you manage to click it, the game gets **progressively harder**.  
 It also keeps track of your **Score, Best Score, and Level**.  
 
-👉 Demo: *(host it with GitHub Pages or Netlify to share a live link)*
+👉 Demo: *[(Button That Fights Back)](https://munzir-mdn.github.io/ButtonThatFightsBack/)*
 
 ---
 
